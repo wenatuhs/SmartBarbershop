@@ -234,6 +234,7 @@ class Barber(Client):
         server = self.get_server()
         if name in [be.name for be in server.bdb.values()]:
             warnings.warn('Nickname {} is already taken, please choose another one!'.format(name))
+            self.uid = _uid
 
             return 1
         else:
