@@ -337,9 +337,14 @@ class Login(QtGui.QWidget):
 
         parent = self.parent
         if not fail:
-            self.cancel()
+            self.reset_login()
             parent.appointment.reset()
             parent.stack.setCurrentWidget(parent.appointment)
+            parent.appointment.out_btn.setText('Logout')
+            parent.appointment.out_btn.clicked.disconnect()
+            parent.appointment.out_btn.clicked.connect(parent.appointment.logout)
+            _msg = 'Hello, {}!'.format(customer.name if customer.name else customer.uid)
+            parent.appointment.welcome.setText(_msg)
             if parent.appointment.bcombo.currentText():
                 _msg = 'Welcome {}, please choose your barber and services!'.format(
                     customer.name if customer.name else customer.uid)
@@ -356,9 +361,12 @@ class Login(QtGui.QWidget):
             parent.status.setText(errort(
                 'Username {} is already taken, please choose another one!'.format(username)))
 
-    def cancel(self):
+    def reset_login(self):
         self.stack.setCurrentWidget(self.logbox)
         self.bstack.setCurrentWidget(self.btns1)
+
+    def cancel(self):
+        self.reset_login()
         self.parent.status.setText(normt('Welcome!'))
 
     def guest_login(self):
