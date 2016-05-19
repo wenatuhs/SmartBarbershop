@@ -95,7 +95,7 @@ class BarberWindow(QtGui.QMainWindow):
         self.stack.addWidget(self.workspace)
         self.stack.setCurrentWidget(self.login)
 
-        self.status = StatusQLabel(normt('Welcome!'), self)
+        self.status = StatusQLabel(normt('Welcome!'))
         font = QtGui.QFont("Sans Serif", 9, QtGui.QFont.Light)
         self.status.setFont(font)
         bar = self.statusBar()
@@ -193,6 +193,7 @@ class Login(QtGui.QWidget):
     def go_register(self):
         parent = self.parent
         parent.stack.setCurrentWidget(parent.register)
+        parent.status.setText(notifyt('Please fill in your info!'))
 
     def notify_all_customers(self, kind='add'):
         parent = self.parent
