@@ -76,10 +76,6 @@ class BarberWindow(QtGui.QMainWindow):
         self.barber = barber
         self.barber.link_window(self)
         self.initUI()
-        # self.timer = QtCore.QTimer()
-        # self.timer.start(1000)
-        # # self.timer.timeout.connect(self.workspace.update_time)
-        # self.timer.timeout.connect(self.status.update_time)
 
     def initUI(self):
         # Set transparent background
@@ -99,7 +95,6 @@ class BarberWindow(QtGui.QMainWindow):
         self.stack.addWidget(self.workspace)
         self.stack.setCurrentWidget(self.login)
 
-        # self.status = QtGui.QLabel(normt('Welcome!'))
         self.status = StatusQLabel(normt('Welcome!'), self)
         font = QtGui.QFont("Sans Serif", 9, QtGui.QFont.Light)
         self.status.setFont(font)
@@ -389,9 +384,6 @@ class WorkSpace(QtGui.QWidget):
         layout.addStretch(1)
         layout.addLayout(btns)
         self.setLayout(layout)
-
-    def update_time(self):
-        self.clock.setText(self.parent.barber.get_server().current_time)
 
     def update_queue(self, done=False):
         parent = self.parent
