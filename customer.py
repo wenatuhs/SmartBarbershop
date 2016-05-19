@@ -183,7 +183,7 @@ class CustomerWindow(QtGui.QMainWindow):
         self.stack.addWidget(self.finish)
         self.stack.setCurrentWidget(self.login)
 
-        self.status = QtGui.QLabel(normt('Welcome!'))
+        self.status = StatusQLabel(normt('Welcome!'), self)
         font = QtGui.QFont("Sans Serif", 9, QtGui.QFont.Light)
         self.status.setFont(font)
         bar = self.statusBar()
