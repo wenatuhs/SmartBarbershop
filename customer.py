@@ -21,6 +21,29 @@ __version__ = '0.8'
 SERVICES = {'haircut': 'Hair Cut', 'wash': 'Wash', 'protect': 'Protect'}
 
 
+class StatusQLabel(QtGui.QLabel):
+    def __init__(self, p_str, parent, duration=3000):
+        super().__init__(p_str, parent)
+        self.parent = parent
+        self.duration = duration
+        self.hold = False
+        self.timer = QtCore.QTimer()
+        self.timer.start(1000)
+        self.timer.timeout.connect(self.update_time)
+
+    def setText(self, p_str):
+        super().setText(p_str)
+        self.hold = True
+        QtCore.QTimer.singleShot(self.duration, self.release)
+
+    def release(self):
+        self.hold = False
+
+    def update_time(self):
+        if not self.hold:
+            super().setText(normt(self.parent.barber.get_server().current_time))
+
+
 class ExtendedQLabel(QtGui.QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
