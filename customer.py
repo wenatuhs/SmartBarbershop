@@ -13,6 +13,7 @@ last edited: May 16, 2016
 
 import os
 import sys
+from datetime import datetime
 import warnings
 
 from PyQt4 import QtGui, QtCore
@@ -22,26 +23,27 @@ SERVICES = {'haircut': 'Hair Cut', 'wash': 'Wash', 'protect': 'Protect'}
 
 
 class StatusQLabel(QtGui.QLabel):
-    def __init__(self, p_str, parent, duration=3000):
+    def __init__(self, p_str, parent=None, duration=3000, kind='barber'):
         super().__init__(p_str, parent)
-        self.parent = parent
         self.duration = duration
-        self.hold = False
+        self.hold = 0
         self.timer = QtCore.QTimer()
         self.timer.start(1000)
         self.timer.timeout.connect(self.update_time)
 
     def setText(self, p_str):
         super().setText(p_str)
-        self.hold = True
+        self.hold += 1
         QtCore.QTimer.singleShot(self.duration, self.release)
 
     def release(self):
-        self.hold = False
+        self.hold -= 1
+        if not self.hold:
+            self.update_time()
 
     def update_time(self):
         if not self.hold:
-            super().setText(normt(self.parent.barber.get_server().current_time))
+            super().setText(normt(datetime.now().strftime('%Y-%m-%d %H:%M')))
 
 
 class ExtendedQLabel(QtGui.QLabel):
@@ -158,12 +160,6 @@ class CustomerWindow(QtGui.QMainWindow):
         self.customer = customer
         self.customer.link_window(self)
         self.initUI()
-        self.timer = QtCore.QTimer()
-        self.timer.start(1000)
-        self.timer.timeout.connect(self.appointment.update_time)
-        self.timer.timeout.connect(self.service.update_time)
-        self.timer.timeout.connect(self.process.update_time)
-        self.timer.timeout.connect(self.finish.update_time)
 
     def initUI(self):
         # Set main widget
@@ -491,9 +487,6 @@ class Appointment(QtGui.QWidget):
                     _msg = 'Sorry, it seems that no barber is at work now...'
                     parent.status.setText(errort(_msg))
 
-    def update_time(self):
-        self.clock.setText(self.parent.customer.get_server().current_time)
-
     def update_barberinfo(self):
         name = self.bcombo.currentText()
         try:
@@ -699,9 +692,6 @@ class Service(QtGui.QWidget):
         layout.addLayout(btns)
         self.setLayout(layout)
 
-    def update_time(self):
-        self.details.setText(self.parent.customer.get_server().current_time)
-
     def go(self):
         parent = self.parent
         customer = parent.customer
@@ -780,9 +770,6 @@ class Process(QtGui.QWidget):
         layout.addStretch(1)
         layout.addLayout(btns)
         self.setLayout(layout)
-
-    def update_time(self):
-        self.details.setText(self.parent.customer.get_server().current_time)
 
     def cancel(self):
         parent = self.parent
@@ -882,9 +869,6 @@ class Finish(QtGui.QWidget):
         layout.addLayout(btns)
 
         self.setLayout(layout)
-
-    def update_time(self):
-        self.details.setText(self.parent.customer.get_server().current_time)
 
     def update_rate_value(self):
         v = self.ratings_sld.value()
