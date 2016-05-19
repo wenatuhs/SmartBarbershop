@@ -17,7 +17,7 @@ import warnings
 from PyQt4 import QtGui, QtCore
 from customer import normt, errort, notifyt, barbercard, StatusQLabel, SERVICES
 
-__version__ = '0.8'
+__version__ = '0.9'
 
 
 def customercard(title='Customer Info', customer=None):

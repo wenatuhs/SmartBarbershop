@@ -18,7 +18,7 @@ import warnings
 
 from PyQt4 import QtGui, QtCore
 
-__version__ = '0.8'
+__version__ = '0.9'
 SERVICES = {'haircut': 'Hair Cut', 'wash': 'Wash', 'protect': 'Protect'}
 
 

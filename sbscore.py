@@ -16,7 +16,7 @@ import pickle
 import warnings
 from datetime import datetime, timedelta
 
-__version__ = '0.8'
+__version__ = '0.9'
 SERVERS = {}
 TIMECOST = {'haircut': 40, 'wash': 20, 'protect': 30}  # unit: min
 

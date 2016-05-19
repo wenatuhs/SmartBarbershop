@@ -16,7 +16,7 @@ from PyQt4 import QtGui, QtCore
 from sbscore import Server, CustomerEntry, BarberEntry, Customer, Barber
 import customer, barber
 
-__version__ = '0.8'
+__version__ = '0.9'
 
 
 class DemoWindow(QtGui.QMainWindow):
