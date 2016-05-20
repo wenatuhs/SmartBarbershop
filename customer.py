@@ -401,11 +401,11 @@ class Appointment(QtGui.QWidget):
         _msg = 'Hello {}!'.format('Darling')
         self.welcome = QtGui.QLabel(_msg)
         self.welcome.setFont(font)
-        self.clock = QtGui.QLabel(self.parent.customer.get_server().current_time)
-        self.clock.setStyleSheet('QLabel  {color: gray; font-size: 12px; font-weight: regular;}')
+        self.details = QtGui.QLabel('Please choose your services and barber:)')
+        self.details.setStyleSheet('QLabel  {color: gray; font-size: 12px; font-weight: regular;}')
         info = QtGui.QVBoxLayout()
         info.addWidget(self.welcome)
-        info.addWidget(self.clock)
+        info.addWidget(self.details)
 
         service = QtGui.QLabel('Service')
         barber = QtGui.QLabel('Barber')
@@ -658,8 +658,7 @@ class Service(QtGui.QWidget):
         font = QtGui.QFont("Sans Serif", 21, QtGui.QFont.Bold)
         thanks = QtGui.QLabel('Thank you for your order!')
         thanks.setFont(font)
-        # self.details = QtGui.QLabel('John will serve you shortly:)')
-        self.details = QtGui.QLabel(self.parent.customer.get_server().current_time)
+        self.details = QtGui.QLabel('Your barber will serve you shortly:)')
         self.details.setStyleSheet('QLabel  {color: gray; font-size: 12px; font-weight: regular;}')
         info = QtGui.QVBoxLayout()
         info.addWidget(thanks)
@@ -719,7 +718,7 @@ class Service(QtGui.QWidget):
     def confirm(self):
         parent = self.parent
         parent.process.thanks.setText('Have a good time!')
-        # parent.process.details.setText('Hohoho:)')
+        parent.process.details.setText('Your service begins:)')
         parent.status.setText(notifyt('Cool! Your service begins!'))
 
     def cancel(self):
@@ -743,8 +742,7 @@ class Process(QtGui.QWidget):
         font = QtGui.QFont("Sans Serif", 21, QtGui.QFont.Bold)
         self.thanks = QtGui.QLabel("It's your turn!")
         self.thanks.setFont(font)
-        # self.details = QtGui.QLabel('John is ready to serve you:)')
-        self.details = QtGui.QLabel(self.parent.customer.get_server().current_time)
+        self.details = QtGui.QLabel('Please come to your barber to begin your service:)')
         self.details.setStyleSheet('QLabel  {color: gray; font-size: 12px; font-weight: regular;}')
         info = QtGui.QVBoxLayout()
         info.addWidget(self.thanks)
@@ -826,8 +824,7 @@ class Finish(QtGui.QWidget):
         font = QtGui.QFont("Sans Serif", 21, QtGui.QFont.Bold)
         thanks = QtGui.QLabel('Your service is done!')
         thanks.setFont(font)
-        # self.details = QtGui.QLabel('See you next time:)')
-        self.details = QtGui.QLabel(self.parent.customer.get_server().current_time)
+        self.details = QtGui.QLabel('See you next time:)')
         self.details.setStyleSheet('QLabel  {color: gray; font-size: 12px; font-weight: regular;}')
         info = QtGui.QVBoxLayout()
         info.addWidget(thanks)
