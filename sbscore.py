@@ -16,7 +16,7 @@ import pickle
 import warnings
 from datetime import datetime, timedelta
 
-__version__ = '0.9'
+__version__ = '0.9.5'
 SERVERS = {}
 TIMECOST = {'haircut': 40, 'wash': 20, 'protect': 30}  # unit: min
 
@@ -85,6 +85,14 @@ class Server:
 
     def suggest(self, service):
         return list(self.barbers.keys())
+
+    @staticmethod
+    def is_valid_worktime(worktime):
+        a, b = worktime
+        if a <= 24 and a >= 0 and b <= 24 and b >= 0 and a <= b:
+            return True
+
+        return False
 
     @staticmethod
     def is_anon_id(uid):
@@ -163,9 +171,22 @@ class CustomerEntry:
 
 class Client:
     def __init__(self):
-        self.uid = None
+        self._uid = None
         self.pwd = None
         self.sid = None
+
+    @property
+    def uid(self):
+        return self._uid
+
+    @uid.setter
+    def uid(self, uid):
+        self._uid = uid
+        if uid:
+            try:
+                self.window.currentid.refresh_id()
+            except AttributeError:
+                pass
 
     def _auto_sel_server(self):
         try:
@@ -224,6 +245,14 @@ class Barber(Client):
             warnings.warn('this is your first time connecting, please fill in your info!')
 
     def register(self, uid, name, gender, age, level='Senior', worktime=[8, 22]):
+        if not name:
+            return 2
+        if age == -1:
+            return 3
+        if worktime[0] == -1:
+            return 4
+        if not Server.is_valid_worktime(worktime):
+            return 5
         _uid = self.uid
         self.uid = uid
         self.name = name  # first name
@@ -246,6 +275,13 @@ class Barber(Client):
 
     def login(self, name):
         server = self.get_server()
+        try:
+            info = [ba for ba in server.barbers.values() if
+                    (not Server.is_anon_barber_id(ba.uid)) and ba.name == name][0]
+
+            return 2
+        except IndexError:
+            pass
         try:
             info = [be for be in server.bdb.values() if be.name == name][0]
             self.name = info.name
@@ -460,6 +496,12 @@ class Customer(Client):
         try:
             customer = server.cdb[uid]
             if pwd == customer.pwd:
+                try:
+                    server.customers[uid]
+
+                    return 2
+                except KeyError:
+                    pass
                 server.unlink(self)
                 self.uid = uid
                 self.pwd = pwd

@@ -18,12 +18,12 @@ import warnings
 
 from PyQt4 import QtGui, QtCore
 
-__version__ = '0.9'
+__version__ = '0.9.5'
 SERVICES = {'haircut': 'Hair Cut', 'wash': 'Wash', 'protect': 'Protect'}
 
 
 class StatusQLabel(QtGui.QLabel):
-    def __init__(self, p_str, parent=None, duration=3000, kind='barber'):
+    def __init__(self, p_str=None, parent=None, duration=3000):
         super().__init__(p_str, parent)
         self.duration = duration
         self.hold = 0
@@ -44,6 +44,19 @@ class StatusQLabel(QtGui.QLabel):
     def update_time(self):
         if not self.hold:
             super().setText(normt(datetime.now().strftime('%Y-%m-%d %H:%M')))
+
+
+class IDQLabel(QtGui.QLabel):
+    def __init__(self, parent=None):
+        super().__init__(None, parent)
+        try:
+            self.client = parent.customer
+        except AttributeError:
+            self.client = parent.barber
+        self.refresh_id()
+
+    def refresh_id(self):
+        self.setText(hight(self.client.uid))
 
 
 class ExtendedQLabel(QtGui.QLabel):
@@ -153,6 +166,10 @@ def notifyt(m):
     return '<font color=\"darkgreen\">{}</font>'.format(m)
 
 
+def hight(m):
+    return '<font color=\"darkblue\">{}</font>'.format(m)
+
+
 class CustomerWindow(QtGui.QMainWindow):
     def __init__(self, customer=None, parent=None):
         super().__init__(parent)
@@ -179,17 +196,23 @@ class CustomerWindow(QtGui.QMainWindow):
         self.stack.addWidget(self.finish)
         self.stack.setCurrentWidget(self.login)
 
-        self.status = StatusQLabel(normt('Welcome!'))
+        self.status = StatusQLabel()
+        self.currentid = IDQLabel(self)
         font = QtGui.QFont("Sans Serif", 9, QtGui.QFont.Light)
         self.status.setFont(font)
+        font = QtGui.QFont("Sans Serif", 9, QtGui.QFont.Bold)
+        self.currentid.setFont(font)
         bar = self.statusBar()
         bar.setStyleSheet("QStatusBar{background:lightgray;}")
         bar.setSizeGripEnabled(False)
         bar.addWidget(QtGui.QLabel(' '))
         bar.addWidget(self.status, 1)
+        bar.addWidget(self.currentid)
+        bar.addWidget(QtGui.QLabel(' '))
 
         self.setWindowTitle('Smart Barbershop Customer Client {}'.format(__version__))
         self.setFixedSize(320, 480)
+        self.status.setText(normt('Welcome!'))
         self.show()
         self.setGeometry(1110, 50, 320, 480)
         # self.center()
@@ -320,8 +343,10 @@ class Login(QtGui.QWidget):
                 _msg = 'Good day {}, but it seems that no barber is at work now...'.format(
                     customer.name if customer.name else customer.uid)
                 parent.status.setText(errort(_msg))
-        else:
+        elif fail == 1:
             parent.status.setText(errort('Incorrect username or password, please try again!'))
+        elif fail == 2:
+            parent.status.setText(errort('Customer already logged in!'))
 
     def go_register(self):
         self.stack.setCurrentWidget(self.regbox)
@@ -608,7 +633,6 @@ class Suggestion(QtGui.QWidget):
         scroll.setWidget(ratings_panel)
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet('QScrollArea  {border-radius: 10px;}')
-        # scroll.setBackgroundRole(QtGui.QPalette.)
         scroll.setFixedHeight(280)
         scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -705,8 +729,8 @@ class Service(QtGui.QWidget):
         server = customer.get_server()
         barber = server.barbers[customer.bid]
 
-        # parent.process.details.setText('{} is ready to serve you now:)'.format(barber.name))
         parent.process.thanks.setText("It's your turn!")
+        parent.process.details.setText('Your barber is ready to serve you now:)')
         parent.process.stack.removeWidget(parent.process.stack.currentWidget())
         card = barbercard('Your Barber', barber, False)
         parent.process.stack.addWidget(card)

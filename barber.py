@@ -15,9 +15,9 @@ import sys
 import warnings
 
 from PyQt4 import QtGui, QtCore
-from customer import normt, errort, notifyt, barbercard, StatusQLabel, SERVICES
+from customer import normt, errort, notifyt, barbercard, StatusQLabel, IDQLabel, SERVICES
 
-__version__ = '0.9'
+__version__ = '0.9.5'
 
 
 def customercard(title='Customer Info', customer=None):
@@ -78,12 +78,6 @@ class BarberWindow(QtGui.QMainWindow):
         self.initUI()
 
     def initUI(self):
-        # Set transparent background
-        p = self.palette()
-        color = p.color(QtGui.QPalette.Background)
-        p.setColor(self.backgroundRole(),
-                   QtGui.QColor(color.red(), color.green(), color.blue(), 0xff))
-        self.setPalette(p)
         # Set main widget
         self.stack = QtGui.QStackedWidget()
         self.setCentralWidget(self.stack)
@@ -95,17 +89,23 @@ class BarberWindow(QtGui.QMainWindow):
         self.stack.addWidget(self.workspace)
         self.stack.setCurrentWidget(self.login)
 
-        self.status = StatusQLabel(normt('Welcome!'))
+        self.status = StatusQLabel()
+        self.currentid = IDQLabel(self)
         font = QtGui.QFont("Sans Serif", 9, QtGui.QFont.Light)
         self.status.setFont(font)
+        font = QtGui.QFont("Sans Serif", 9, QtGui.QFont.Bold)
+        self.currentid.setFont(font)
         bar = self.statusBar()
         bar.setStyleSheet("QStatusBar{background:lightgray;}")
         bar.setSizeGripEnabled(False)
         bar.addWidget(QtGui.QLabel(' '))
         bar.addWidget(self.status, 1)
+        bar.addWidget(self.currentid)
+        bar.addWidget(QtGui.QLabel(' '))
 
         self.setWindowTitle('Smart Barbershop Barber Client {}'.format(__version__))
         self.setFixedSize(320, 480)
+        self.status.setText(normt('Welcome!'))
         self.show()
         self.setGeometry(1110, 50, 320, 480)
         # self.center()
@@ -187,12 +187,15 @@ class Login(QtGui.QWidget):
             parent.status.setText(notifyt(_msg))
             # Notify all connected customers
             self.notify_all_customers()
-        else:
+        elif fail == 1:
             parent.status.setText(errort('Incorrect nickname, please try again!'))
+        elif fail == 2:
+            parent.status.setText(errort('Barber already logged in!'))
 
     def go_register(self):
         parent = self.parent
         parent.stack.setCurrentWidget(parent.register)
+        parent.register.reg_nickname.setText(self.usr.text())
         parent.status.setText(notifyt('Please fill in your info!'))
 
     def notify_all_customers(self, kind='add'):
@@ -304,10 +307,17 @@ class Register(QtGui.QWidget):
         uid = self.reg_usrid.text()
         nickname = self.reg_nickname.text()
         gender = self.reg_gender.currentText()
-        age = int(self.reg_age.text())
+        try:
+            age = int(self.reg_age.text())
+        except ValueError:
+            age = -1
         level = self.reg_level.currentText()
-        worktime_a = int(self.reg_worktime_a.text())
-        worktime_b = int(self.reg_worktime_b.text())
+        try:
+            worktime_a = int(self.reg_worktime_a.text())
+            worktime_b = int(self.reg_worktime_b.text())
+        except ValueError:
+            worktime_a = -1
+            worktime_b = -1
         fail = barber.register(uid, nickname, gender, age, level, [worktime_a, worktime_b])
 
         if not fail:
@@ -325,14 +335,46 @@ class Register(QtGui.QWidget):
             _msg = 'Hello {}, are you ready for the customers?'.format(barber.name)
             parent.status.setText(notifyt(_msg))
             parent.login.notify_all_customers()
-        else:
+            self.reset()
+            self.refresh_new_id_all()
+        elif fail == 1:
             parent.status.setText(errort(
                 'Nickname {} is already taken, please choose another one!'.format(nickname)))
+        elif fail == 2:
+            parent.status.setText(errort('Nickname cannot be empty!'))
+        elif fail == 3:
+            parent.status.setText(errort('Age should be a proper integer!'))
+        elif fail == 4:
+            parent.status.setText(errort('Worktime should be an integer!'))
+        elif fail == 5:
+            parent.status.setText(errort('Invalid worktime range!'))
 
     def cancel(self):
         parent = self.parent
         parent.stack.setCurrentWidget(parent.login)
         parent.status.setText(normt('Welcome!'))
+        self.reset()
+
+    def reset(self):
+        self.reg_gender.setCurrentIndex(0)
+        self.reg_level.setCurrentIndex(0)
+        self.reg_nickname.setText('')
+        self.reg_age.setText('')
+        self.reg_worktime_a.setText('8')
+        self.reg_worktime_b.setText('22')
+
+    def refresh_new_id(self):
+        uid = self.parent.barber.get_server().new_barber_id()
+        self.reg_usrid.setText(uid)
+
+    def refresh_new_id_all(self):
+        server = self.parent.barber.get_server()
+        uid = server.new_barber_id()
+        for bb in server.barbers.values():
+            try:
+                bb.window.register.reg_usrid.setText(uid)
+            except AttributeError:
+                warnings.warn('no window attached!')
 
 
 class WorkSpace(QtGui.QWidget):
@@ -404,7 +446,7 @@ class WorkSpace(QtGui.QWidget):
             except IndexError:
                 self.next_btn.setEnabled(False)
                 self.fin_btn.setEnabled(True)
-                _msg = "Nicely done! You don't have any customer for now, please take a break:)"
+                _msg = "Nicely done! You don't have any customers for now:)"
             parent.status.setText(notifyt(_msg))
 
     def update_review(self):
@@ -423,7 +465,7 @@ class WorkSpace(QtGui.QWidget):
             self.parent.barber.ready()
             self.next_btn.setText('Next')
             self.next_btn.setEnabled(False)
-            self.parent.status.setText(normt("Alright let's rock!"))
+            self.parent.status.setText(notifyt("Alright let's rock!"))
         elif self.next_btn.text() == 'Next':
             self.parent.barber.ready()
             self.next_btn.setText('Begin')
